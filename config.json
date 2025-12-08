@@ -1,0 +1,62 @@
+{
+  "project_name": "Multi-Style AI Image Generator",
+  "version": "1.0.0",
+  "description": "使用 Hugging Face Diffusers 和 Stable Diffusion 的多風格 AI 繪圖生成器",
+  "author": "AI Assistant",
+  "date": "2025-12-06",
+  
+  "project_structure": {
+    "main_script": "multi_style_image_generator.py",
+    "config_file": "config.json",
+    "requirements_file": "requirements.txt",
+    "readme_file": "README.md",
+    "directories": [
+      "generated_images/",
+      "logs/",
+      "models_cache/"
+    ]
+  },
+  
+  "style_models": {
+    "寫實風格": {
+      "model_id": "runwayml/stable-diffusion-v1-5",
+      "description": "高質量的寫實攝影風格，適合生成逼真的人物和場景"
+    },
+    "二次元動漫": {
+      "model_id": "hakurei/waifu-diffusion",
+      "description": "日本動漫風格，適合生成可愛的動畫人物"
+    },
+    "夢幻藝術": {
+      "model_id": "dreamlike-art/dreamlike-diffusion-1.0",
+      "description": "神幻夢幻風格，適合生成超現實和藝術作品"
+    },
+    "3D渲染": {
+      "model_id": "stablediffusionapi/realistic-vision-v30",
+      "description": "3D CGI 風格，適合生成逼真的三維渲染效果"
+    },
+    "油畫風格": {
+      "model_id": "nitrosocial/Ghibli-Diffusion",
+      "description": "宮崎駿風格的油畫藝術風格"
+    }
+  },
+  
+  "generation_parameters": {
+    "default_num_images": 4,
+    "default_num_inference_steps": 30,
+    "default_guidance_scale": 7.5,
+    "default_height": 512,
+    "default_width": 512,
+    "torch_dtype": "float16",
+    "device": "cuda"
+  },
+  
+  "features": [
+    "支持中文提示詞自動翻譯",
+    "支持多種預訓練模型風格",
+    "GPU 加速和記憶體優化",
+    "批次生成與網格顯示",
+    "完整的錯誤處理",
+    "日誌記錄和持久化",
+    "模型緩存管理"
+  ]
+}

@@ -1,0 +1,38 @@
+name: ai-image-generator
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  # PyTorch with CUDA
+  - pytorch::pytorch::=2.0.0
+  - pytorch::torchvision::=0.15.0
+  - pytorch::pytorch-cuda::=11.8
+  
+  # Python version
+  - python=3.10
+  
+  # Image processing
+  - pillow>=9.5.0
+  - numpy>=1.24.0
+  
+  # Development tools
+  - jupyter
+  - ipython
+  - ipywidgets
+  
+  # Testing
+  - pytest
+  - pytest-cov
+  
+  # Code formatting
+  - black
+  - flake8
+  
+  # Pip dependencies
+  - pip
+  - pip::diffusers>=0.21.0
+  - pip::transformers>=4.30.0
+  - pip::deep-translator>=1.11.4
+  - pip::accelerate>=0.20.0
+  - pip::tqdm>=4.65.0
