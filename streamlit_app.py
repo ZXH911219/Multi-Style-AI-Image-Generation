@@ -1,7 +1,4 @@
-"""
-Multi-Style AI Image Generator - Streamlit Web App
-Fully self-contained version - only needs Streamlit
-"""
+"""Multi-Style AI Image Generator - Streamlit Web App."""
 
 import streamlit as st
 import json
@@ -10,6 +7,7 @@ from datetime import datetime
 import random
 from PIL import Image, ImageDraw
 import io
+import requests
 
 # Page configuration
 st.set_page_config(
@@ -61,6 +59,61 @@ STYLES = {
         "color": "#AA96DA"
     }
 }
+
+HF_MODEL = "runwayml/stable-diffusion-v1-5"
+HF_ENDPOINT = f"https://router.huggingface.co/hf-inference/models/{HF_MODEL}"
+STYLE_PROMPTS = {
+    "realistic": "photorealistic, natural lighting, highly detailed",
+    "anime_2d": "2D anime illustration, expressive, vibrant colors, clean line art",
+    "fantasy_art": "fantasy concept art, magical atmosphere, cinematic lighting",
+    "3d_rendering": "high-quality 3D render, detailed materials, studio lighting",
+    "oil_painting": "oil painting, visible brush strokes, rich artistic texture"
+}
+
+
+def generate_ai_image(style_key, prompt, width, height, quality, guidance):
+    """Generate an image through the Hugging Face Inference API."""
+    try:
+        token = st.secrets.get("HF_TOKEN")
+    except Exception:
+        token = None
+
+    if not token:
+        raise RuntimeError(
+            "HF_TOKEN is not configured. Add it in Streamlit Cloud: "
+            "Manage app > Settings > Secrets."
+        )
+
+    steps = {"Fast": 20, "Standard": 30, "High": 40}[quality]
+    styled_prompt = f"{prompt}, {STYLE_PROMPTS[style_key]}"
+    payload = {
+        "inputs": styled_prompt,
+        "parameters": {
+            "width": width,
+            "height": height,
+            "num_inference_steps": steps,
+            "guidance_scale": guidance,
+            "negative_prompt": "blurry, low quality, distorted, malformed"
+        }
+    }
+
+    response = requests.post(
+        HF_ENDPOINT,
+        headers={"Authorization": f"Bearer {token}"},
+        json=payload,
+        timeout=180
+    )
+    content_type = response.headers.get("content-type", "")
+    if response.ok and content_type.startswith("image/"):
+        return Image.open(io.BytesIO(response.content)).convert("RGB")
+
+    try:
+        error_details = response.json().get("error", response.text)
+    except ValueError:
+        error_details = response.text
+    raise RuntimeError(
+        f"Hugging Face API failed ({response.status_code}): {error_details}"
+    )
 
 def create_demo_image(style_key, prompt, width=512, height=512):
     """Create a demo image based on style"""
@@ -254,42 +307,32 @@ if generate_btn:
     if not prompt:
         st.warning("Please enter a prompt first")
     else:
-        st.info(f"""
-        Generating {num_images} image(s) in {STYLES[style]['name']} style...
-        
-        NOTE: This demo version shows placeholder images.
-        
-        To enable real AI image generation:
-        1. Install dependencies: pip install -r requirements.txt
-        2. The app will then use actual PyTorch + Diffusers models
-        3. First run will download AI models (10-30 minutes)
-        """)
-        
-        # Generate demo images
+        st.info(f"Generating {num_images} image(s) with Hugging Face AI in {STYLES[style]['name']} style...")
         size_map = {"512x512": (512, 512), "768x768": (768, 768)}
         width, height = size_map[image_size]
         
         with st.spinner(f"Generating {num_images} image(s)..."):
             cols = st.columns(min(num_images, 2))
             
-            for idx in range(num_images):
-                img = create_demo_image(style, prompt, width, height)
-                
-                with cols[idx % len(cols)]:
-                    st.image(img, caption=f"Image {idx+1} ({STYLES[style]['name']})")
-            
-            # Record history
-            record = {
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "prompt": prompt,
-                "style": STYLES[style]['name'],
-                "num_images": num_images,
-                "quality": image_quality,
-                "size": image_size,
-                "status": "demo"
-            }
-            st.session_state.generation_history.append(record)
-            st.success("Demo images generated successfully!")
+            try:
+                for idx in range(num_images):
+                    img = generate_ai_image(style, prompt, width, height, image_quality, guidance)
+                    with cols[idx % len(cols)]:
+                        st.image(img, caption=f"Image {idx+1} ({STYLES[style]['name']})")
+            except RuntimeError as error:
+                st.error(str(error))
+            else:
+                record = {
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "prompt": prompt,
+                    "style": STYLES[style]['name'],
+                    "num_images": num_images,
+                    "quality": image_quality,
+                    "size": image_size,
+                    "status": "Hugging Face API"
+                }
+                st.session_state.generation_history.append(record)
+                st.success("AI images generated successfully!")
 
 if demo_btn:
     st.info("Demo Mode - 5 Art Styles Showcase")
@@ -387,32 +430,27 @@ Location: c:\\Users\\user\\Desktop\\HW4
 """)
 
 st.sidebar.info("""
-**Demo Version Active**
+**AI Generation Active**
 
-This version works without dependencies.
-Shows placeholder images for demonstration.
+Generation uses the Hugging Face Inference API.
 
-To enable real AI generation:
-pip install -r requirements.txt
+Required Streamlit secret: `HF_TOKEN`
 """)
 
 # Instructions
 with st.sidebar.expander("Setup Instructions", expanded=True):
     st.markdown("""
-    **Current Status:** Demo mode (no GPU needed)
+    **Current Status:** Hugging Face Inference API
     
-    **For Real AI Generation:**
+    **Configure the API:**
     
-    1. Install dependencies:
-    ```
-    pip install -r requirements.txt
-    ```
+    1. Create a Hugging Face access token with inference permissions.
     
-    2. First run will download models (10-30 min)
+    2. In Streamlit Cloud, open Manage app > Settings > Secrets.
     
-    3. Restart this app after installation
+    3. Add `HF_TOKEN = "hf_your_token"` and save.
     
-    4. Then you can generate real images
+    4. Reboot the app and generate an image.
     """)
 
 # FAQ

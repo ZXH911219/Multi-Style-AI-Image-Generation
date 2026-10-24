@@ -2,6 +2,16 @@
 
 [線上 Demo](https://multi-style-ai-image-generation.streamlit.app/)
 
+## Streamlit Cloud 設定
+
+此 Demo 使用 Hugging Face Inference API 生成圖片。請在 Streamlit Cloud 的 `Manage app > Settings > Secrets` 加入：
+
+```toml
+HF_TOKEN = "hf_your_token"
+```
+
+Token 需要具備 Hugging Face Inference 權限，請勿將真實 Token 寫入 GitHub。
+
 ## 項目簡介
 
 **Multi-Style AI Image Generator** 是一個基於 Hugging Face Diffusers 和 Stable Diffusion 的高級 AI 繪圖生成系統。該項目支持使用中文提示詞生成多種藝術風格的圖片，包括寫實、二次元動漫、夢幻藝術、3D 渲染和油畫風格。

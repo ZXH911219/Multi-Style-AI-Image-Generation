@@ -1,3 +1,4 @@
 # Dependencies for the Streamlit demo entry point.
 streamlit>=1.40.0
 Pillow>=9.5.0
+requests>=2.31.0
