@@ -9,7 +9,7 @@ import re
 import unicodedata
 from PIL import Image, ImageDraw
 import io
-import requests
+from huggingface_hub import InferenceClient
 
 # Page configuration
 st.set_page_config(
@@ -62,8 +62,7 @@ STYLES = {
     }
 }
 
-HF_MODEL = "runwayml/stable-diffusion-v1-5"
-HF_ENDPOINT = f"https://router.huggingface.co/hf-inference/models/{HF_MODEL}"
+HF_MODEL = "black-forest-labs/FLUX.1-schnell"
 STYLE_PROMPTS = {
     "realistic": "photorealistic, natural lighting, highly detailed",
     "anime_2d": "2D anime illustration, expressive, vibrant colors, clean line art",
@@ -97,34 +96,19 @@ def generate_ai_image(style_key, prompt, width, height, quality, guidance):
 
     steps = {"Fast": 20, "Standard": 30, "High": 40}[quality]
     styled_prompt = f"{prompt}, {STYLE_PROMPTS[style_key]}"
-    payload = {
-        "inputs": styled_prompt,
-        "parameters": {
-            "width": width,
-            "height": height,
-            "num_inference_steps": steps,
-            "guidance_scale": guidance,
-            "negative_prompt": "blurry, low quality, distorted, malformed"
-        }
-    }
-
-    response = requests.post(
-        HF_ENDPOINT,
-        headers={"Authorization": f"Bearer {token}"},
-        json=payload,
-        timeout=180
-    )
-    content_type = response.headers.get("content-type", "")
-    if response.ok and content_type.startswith("image/"):
-        return Image.open(io.BytesIO(response.content)).convert("RGB")
-
+    client = InferenceClient(token=token, provider="auto")
     try:
-        error_details = response.json().get("error", response.text)
-    except ValueError:
-        error_details = response.text
-    raise RuntimeError(
-        f"Hugging Face API failed ({response.status_code}): {error_details}"
-    )
+        return client.text_to_image(
+            styled_prompt,
+            model=HF_MODEL,
+            width=width,
+            height=height,
+            num_inference_steps=steps,
+            guidance_scale=guidance,
+            negative_prompt="blurry, low quality, distorted, malformed"
+        ).convert("RGB")
+    except Exception as error:
+        raise RuntimeError(f"Hugging Face API failed: {error}") from error
 
 def create_demo_image(style_key, prompt, width=512, height=512):
     """Create a demo image based on style"""
