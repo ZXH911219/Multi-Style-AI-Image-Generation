@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 import random
+import unicodedata
 from PIL import Image, ImageDraw
 import io
 import requests
@@ -83,6 +84,16 @@ def generate_ai_image(style_key, prompt, width, height, quality, guidance):
             "HF_TOKEN is not configured. Add it in Streamlit Cloud: "
             "Manage app > Settings > Secrets."
         )
+
+    token = unicodedata.normalize("NFKC", str(token)).strip().strip("\"'")
+    token = "".join(token.split())
+    try:
+        token.encode("ascii")
+    except UnicodeEncodeError as error:
+        raise RuntimeError(
+            "HF_TOKEN contains non-ASCII characters. Re-enter the plain token "
+            "without smart quotes or extra text."
+        ) from error
 
     steps = {"Fast": 20, "Standard": 30, "High": 40}[quality]
     styled_prompt = f"{prompt}, {STYLE_PROMPTS[style_key]}"
