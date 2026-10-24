@@ -1,5 +1,7 @@
 # 多風格 AI 繪圖生成器 📸🎨
 
+[線上 Demo](https://multi-style-ai-image-generation.streamlit.app/)
+
 ## 項目簡介
 
 **Multi-Style AI Image Generator** 是一個基於 Hugging Face Diffusers 和 Stable Diffusion 的高級 AI 繪圖生成系統。該項目支持使用中文提示詞生成多種藝術風格的圖片，包括寫實、二次元動漫、夢幻藝術、3D 渲染和油畫風格。
