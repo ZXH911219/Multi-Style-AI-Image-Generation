@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 import random
+import re
 import unicodedata
 from PIL import Image, ImageDraw
 import io
@@ -85,15 +86,14 @@ def generate_ai_image(style_key, prompt, width, height, quality, guidance):
             "Manage app > Settings > Secrets."
         )
 
-    token = unicodedata.normalize("NFKC", str(token)).strip().strip("\"'")
-    token = "".join(token.split())
-    try:
-        token.encode("ascii")
-    except UnicodeEncodeError as error:
+    token = unicodedata.normalize("NFKC", str(token))
+    token_match = re.search(r"hf_[A-Za-z0-9]+", token)
+    if token_match is None:
         raise RuntimeError(
-            "HF_TOKEN contains non-ASCII characters. Re-enter the plain token "
-            "without smart quotes or extra text."
-        ) from error
+            "HF_TOKEN is invalid. Paste only the token beginning with hf_, "
+            "without HF_TOKEN =, Bearer, quotes, or extra text."
+        )
+    token = token_match.group(0)
 
     steps = {"Fast": 20, "Standard": 30, "High": 40}[quality]
     styled_prompt = f"{prompt}, {STYLE_PROMPTS[style_key]}"
